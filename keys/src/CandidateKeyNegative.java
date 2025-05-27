@@ -15,21 +15,33 @@ public class CandidateKeyNegative {
             int du = cPsi[1];
             if (dv == du)
                 continue;
-            List<Integer> topDistances = topDistancesMap.get(attrIndex);
-            int dSMax = dv;
-            int dSMin = du;
-            if((du - dv) != 1){
-                for (int d : topDistances) {
-                    if (d > dv) {
-                        dSMin = d;
-                        break;
+            int dSMax = dv, dMax = dv;
+            int dSMin = du, dMin = du;
+            for (String pair : qMinusPsi0){
+                int dA = mapHash.get(pair)[attrIndex];
+                if (dA > dMax && dA <= du) {
+                    if (psi.matches(pair, mapHash)) {
+                        dSMax = dMax;
+                        dMax = dA;
                     }
                 }
-                for (int i = topDistances.size() - 1; i >= 0; i--) {
-                    int d = topDistances.get(i);
-                    if (d < du) {
-                        dSMax = d;
-                        break;
+                if (dA < dMin && dA >= dv) {
+                    if (psi.matches(pair, mapHash)) {
+                        dSMin = dMin;
+                        dMin = dA;
+                    }
+                }
+            }
+            for (String pair : pPlusPsi0){
+                int dA = mapHash.get(pair)[attrIndex];
+                if (dA < dMax) {
+                    if (dA > dSMax) {
+                        dSMax = dA;
+                    }
+                }
+                if (dMin < dA) {
+                    if (dA < dSMin) {
+                        dSMin = dA;
                     }
                 }
             }
@@ -45,7 +57,6 @@ public class CandidateKeyNegative {
                 PsiS.add(psi1);
             }
             if (dSMin != dv) {
-
                 List<int[]> copiedRestrictions = new ArrayList<>();
                 for (int[] range : psi.getDistanceRestrictions()) {
                     copiedRestrictions.add(Arrays.copyOf(range, range.length));
@@ -79,7 +90,7 @@ public class CandidateKeyNegative {
     }
 
 
-    // Algorithm 5: Candidate Generation with Negative Pruning MCG(𝜓, 𝑝+𝜓0,𝑞−𝜓0)
+    // Algorithm 3: Candidate Generation with Negative Pruning MCG
     public Set<Candidate> MCG(Candidate psi, Set<String> pPlusPsi0, Set<String> qMinusPsi0, Double eta_c,
             Map<Integer, List<Integer>> topDistancesMap, Map<String, int[]> mapHash) {
         Set<Candidate> Psi0 = new HashSet<>();
@@ -253,7 +264,6 @@ public class CandidateKeyNegative {
         public boolean matches(String pair, Map<String, int[]> mapHash) {
             int[] distances = mapHash.get(pair);
             if (distances == null) {
-                // System.out.println("null");
                 return false;
             }
         
@@ -295,11 +305,11 @@ public class CandidateKeyNegative {
             return agreeSet;
         }
 
-        public Set<String> getNegativeSet() { // Getter for negative set
+        public Set<String> getNegativeSet() { 
             return negativeSet;
         }
 
-        public Set<String> getPositiveSet() { // Getter for positive set
+        public Set<String> getPositiveSet() { 
             return positiveSet;
         }
 
