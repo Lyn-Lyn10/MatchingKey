@@ -7,6 +7,11 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 
 import src.CandidateKeyNegative.Candidate;
 import src.CandidateKeyNegative.EditDistanceUtil;
@@ -14,6 +19,7 @@ import src.CandidateKeyNegative.Tuple;
 
 public class MCG_GA {
     static Map<String, int[]> distanceCache = new HashMap<>();
+
     public static Set<Candidate> MCGGA(Set<Candidate> candidateSet, double eta_s) {
         Set<Candidate> Ψo = new HashSet<>();
         double supp_s = 0;
@@ -62,17 +68,62 @@ public class MCG_GA {
         return Ψo;
     }
 
+    private static int normalizeDistance(double rawDistance, double maxDistance, int min, int max) {
+        if (maxDistance == 0)
+            return 1;
+        double normalized = Math.log(1 + rawDistance) / Math.log(1 + maxDistance);
+        return min + (int) Math.floor(normalized * (max));
+    }
+
+    public static Map<Integer, List<Integer>> calculateDistanceValues(int min, int max, List<Double> ratios) {
+        Map<Integer, List<Integer>> allAttrRanges = new HashMap<>();
+        int numAttributes = distanceCache.values().iterator().next().length;
+
+        for (int attr = 0; attr < numAttributes; attr++) {
+            Map<Integer, Integer> frequencyMap = new HashMap<>();
+
+            for (int[] distances : distanceCache.values()) {
+                int dist = distances[attr];
+                frequencyMap.put(dist, frequencyMap.getOrDefault(dist, 0) + 1);
+            }
+
+            List<Integer> sortedByFreq = new ArrayList<>(frequencyMap.keySet());
+            sortedByFreq.sort((a, b) -> frequencyMap.get(b) - frequencyMap.get(a));
+
+            int keepCount = (int) Math.ceil(sortedByFreq.size() * ratios.get(attr));
+            Set<Integer> selectedDistances = new TreeSet<>(
+                    sortedByFreq.subList(0, Math.min(keepCount, sortedByFreq.size())));
+
+            Set<Integer> actualValues = new HashSet<>();
+            for (int[] distances : distanceCache.values()) {
+                actualValues.add(distances[attr]);
+            }
+            if (!actualValues.isEmpty()) {
+                int minValue = Collections.min(actualValues);
+                int maxValue = Collections.max(actualValues);
+                selectedDistances.add(minValue);
+                selectedDistances.add(maxValue);
+            }
+
+            List<Integer> distList = new ArrayList<>(selectedDistances);
+            Collections.sort(distList);
+            allAttrRanges.put(attr, distList);
+        }
+
+        return allAttrRanges;
+    }
+
     public static void main(String[] args) {
-        String filePath = "../data/retail.arff";
-        double[] c = {150.0,140.0};
-        for (int mm = 0; mm <=1; mm++){
+        String filePath = "./data/retail.arff";
+        double[] c = { 150.0, 140.0 };
+        for (int mm = 0; mm <= 1; mm++) {
             System.out.println(c[mm]);
             for (int m = 100; m <= 1300; m += 200) {
 
                 List<Tuple> r = new ArrayList<>();
                 Set<String> pPlusPsi0 = new HashSet<>();
                 Set<String> qMinusPsi0 = new HashSet<>();
-                int[] selectedColumns = { 0,1, 2,3};
+                int[] selectedColumns = { 0, 1, 2, 3 };
                 int maxn = 4;
                 try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                     String line;
@@ -129,11 +180,12 @@ public class MCG_GA {
                 System.out.println("eta_c:" + eta_c);
                 int s = r.get(0).size();
                 List<Double> percentages = Arrays.asList(1.0, 1.0, 1.0, 1.0);
-                int min =0;
-                int max =9;
+                int min = 0;
+                int max = 9;
                 double[] maxDistances = new double[s];
                 Map<String, Integer> distanceCount = new HashMap<>();
-                // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd
+                // HH:mm:ss");
                 DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                         .appendPattern("yyyy-MM-dd HH:mm:ss")
                         .optionalStart()
@@ -158,8 +210,7 @@ public class MCG_GA {
                             } else {
                                 dist = EditDistanceUtil.calculateEditDistance(
                                         r.get(i).getAttribute(attr),
-                                        r.get(j).getAttribute(attr)
-                                );
+                                        r.get(j).getAttribute(attr));
                             }
                             distanceCount.put(key, dist);
                             maxDistances[attr] = Math.max(maxDistances[attr], dist);
@@ -180,7 +231,7 @@ public class MCG_GA {
                         distanceCache.put(pairKey, distances);
                     }
                 }
-                Map<Integer, List<Integer>> topdistanceMap = calculateDistanceValues(min, max,percentages);
+                Map<Integer, List<Integer>> topdistanceMap = calculateDistanceValues(min, max, percentages);
                 List<int[]> distanceRestrictions = new ArrayList<>();
 
                 for (Map.Entry<Integer, List<Integer>> entry : topdistanceMap.entrySet()) {
@@ -189,7 +240,7 @@ public class MCG_GA {
                     if (!values.isEmpty()) {
                         int minVal = Collections.min(values);
                         int maxVal = Collections.max(values);
-                        distanceRestrictions.add(new int[]{minVal, maxVal});
+                        distanceRestrictions.add(new int[] { minVal, maxVal });
                     }
                 }
                 int totalPairs = r.size() * (r.size() - 1) / 2;
@@ -201,7 +252,8 @@ public class MCG_GA {
 
                 System.out.println("Begin MCG");
                 long startTime = System.currentTimeMillis();
-                Set<Candidate> candidateSet = generator.MCG(psi, pPlusPsi0, qMinusPsi0, eta_c, topdistanceMap, distanceCache);
+                Set<Candidate> candidateSet = generator.MCG(psi, pPlusPsi0, qMinusPsi0, eta_c, topdistanceMap,
+                        distanceCache);
                 long endTime = System.currentTimeMillis();
                 long executionTime = endTime - startTime;
                 System.out.println("MCG time (milliseconds): " + executionTime);
@@ -209,13 +261,11 @@ public class MCG_GA {
                 for (Candidate candidate : candidateSet) {
                     // System.out.println(candidate.toString());
                 }
-                generator.printCallCounts();
+
                 System.out.println("gd num:" + pPlusPsi0.size());
                 double eta_s = c[mm] / 844350;
                 long startTimeMillis = System.currentTimeMillis();
-                int[] minn = {0,0,0,0};
-                int[] maxx = {9,9,9,9};
-                Set<Candidate> resultSet = MCGGA(candidateSet, eta_s, minn, maxx);
+                Set<Candidate> resultSet = MCGGA(candidateSet, eta_s);
 
                 long endTimeMillis = System.currentTimeMillis();
                 long executionTimeMillis = endTimeMillis - startTimeMillis;

@@ -1,4 +1,5 @@
 package src;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -10,20 +11,22 @@ import java.util.*;
 public class CandidateKeyGeneration {
     Map<String, int[]> distanceCache = new HashMap<>();
 
-    public Set<Candidate> preprocessAndCalculateDistances(List<Tuple> r, double eta_c, Set<String> correctPairs, int min, int max,List<Double> ratios) {
+    public Set<Candidate> preprocessAndCalculateDistances(List<Tuple> r, double eta_c, Set<String> correctPairs,
+            int min, int max, List<Double> ratios) {
         long startTimeMillis = System.currentTimeMillis();
-        int totalPairs = (r.size() * (r.size() - 1)) / 2; 
+        int totalPairs = (r.size() * (r.size() - 1)) / 2;
         int numAttributes = r.get(0).size();
         double[] maxDistances = new double[numAttributes];
         Map<String, Integer> tempDistances = new HashMap<>();
-        // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd
+        // HH:mm:ss");
         System.out.println("Begin EditDistance Store");
         DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-            .appendPattern("yyyy-MM-dd HH:mm:ss")
-            .optionalStart()
-            .appendFraction(ChronoField.MICRO_OF_SECOND, 1, 6, true)
-            .optionalEnd()
-            .toFormatter();
+                .appendPattern("yyyy-MM-dd HH:mm:ss")
+                .optionalStart()
+                .appendFraction(ChronoField.MICRO_OF_SECOND, 1, 6, true)
+                .optionalEnd()
+                .toFormatter();
         ZoneOffset zoneOffset = ZoneOffset.UTC;
         System.out.println("Begin EditDistance Store");
         for (int attr = 0; attr < numAttributes; attr++) {
@@ -42,8 +45,7 @@ public class CandidateKeyGeneration {
                     } else {
                         dist = computeDistance(
                                 r.get(i).getAttribute(attr),
-                                r.get(j).getAttribute(attr)
-                        );
+                                r.get(j).getAttribute(attr));
                     }
                     tempDistances.put(key, dist);
                     maxDistances[attr] = Math.max(maxDistances[attr], dist);
@@ -64,7 +66,7 @@ public class CandidateKeyGeneration {
             }
         }
 
-        List<List<int[]>> distanceValues = calculateMatchingKeys(min,max, ratios);
+        List<List<int[]>> distanceValues = calculateMatchingKeys(min, max, ratios);
         Map<Integer, Candidate> candidateMap = new HashMap<>();
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < r.size(); i++) {
@@ -111,8 +113,8 @@ public class CandidateKeyGeneration {
 
         long endTime = System.currentTimeMillis();
         long Time = endTime - startTime;
-        System.out.println("CSP Time:"+Time);
-        System.out.println("Candidate Num:"+potentialKeys.size());
+        System.out.println("CSP Time:" + Time);
+        System.out.println("Candidate Num:" + potentialKeys.size());
         return potentialKeys;
     }
 
@@ -135,17 +137,17 @@ public class CandidateKeyGeneration {
             agreeSet.add(pairKey);
         }
 
-        public void addTruth(){
+        public void addTruth() {
             truth = truth + 1;
         }
 
         public double getConfidence() {
-            this.confidence = (double)truth /(double) agreeSet.size();
+            this.confidence = (double) truth / (double) agreeSet.size();
             return confidence;
         }
 
         public double getSupport() {
-            support = (double) agreeSet.size() / (double)totalPairs;
+            support = (double) agreeSet.size() / (double) totalPairs;
             return support;
         }
 
@@ -166,7 +168,7 @@ public class CandidateKeyGeneration {
         public List<String> getAgreeSet() {
             return agreeSet;
         }
-        
+
         public void deleteAgree(String pairKey) {
             agreeSet.remove(pairKey);
         }
@@ -181,10 +183,9 @@ public class CandidateKeyGeneration {
             candidateCopy.truth = this.truth;
             candidateCopy.confidence = this.confidence;
             candidateCopy.support = this.support;
-            
+
             return candidateCopy;
         }
-    
 
         @Override
         public String toString() {
@@ -208,15 +209,15 @@ public class CandidateKeyGeneration {
             return sb.toString();
         }
     }
+
     public List<List<int[]>> calculateMatchingKeys(int min, int max, List<Double> ratios) {
         List<List<int[]>> allAttrRanges = calculateDistanceValues(min, max, ratios);
 
         List<List<int[]>> cartesianProduct = new ArrayList<>();
         cartesianProduct.add(new ArrayList<>());
-        
+
         for (List<int[]> attrRanges : allAttrRanges) {
             List<List<int[]>> newProduct = new ArrayList<>();
-            
 
             for (List<int[]> existingCombination : cartesianProduct) {
 
@@ -227,15 +228,15 @@ public class CandidateKeyGeneration {
                 }
             }
             cartesianProduct = newProduct;
-        
+        }
+
         return cartesianProduct;
     }
-    
 
     public List<List<int[]>> calculateDistanceValues(int min, int max, List<Double> ratios) {
         List<List<int[]>> allAttrRanges = new ArrayList<>();
         int numAttributes = distanceCache.values().iterator().next().length;
-    
+
         for (int attr = 0; attr < numAttributes; attr++) {
             Map<Integer, Integer> frequencyMap = new HashMap<>();
 
@@ -248,7 +249,8 @@ public class CandidateKeyGeneration {
             sortedByFreq.sort((a, b) -> frequencyMap.get(b) - frequencyMap.get(a));
             System.out.println(sortedByFreq.size());
             int keepCount = (int) Math.ceil(sortedByFreq.size() * ratios.get(attr));
-            Set<Integer> selectedDistances = new TreeSet<>(sortedByFreq.subList(0, Math.min(keepCount, sortedByFreq.size())));
+            Set<Integer> selectedDistances = new TreeSet<>(
+                    sortedByFreq.subList(0, Math.min(keepCount, sortedByFreq.size())));
 
             int minValue = Collections.min(frequencyMap.keySet());
             int maxValue = Collections.max(frequencyMap.keySet());
@@ -260,21 +262,21 @@ public class CandidateKeyGeneration {
             List<int[]> attrRanges = new ArrayList<>();
             for (int i = 0; i < distList.size(); i++) {
                 for (int j = i; j < distList.size(); j++) {
-                    attrRanges.add(new int[]{distList.get(i), distList.get(j)});
+                    attrRanges.add(new int[] { distList.get(i), distList.get(j) });
                 }
             }
-    
+
             allAttrRanges.add(attrRanges);
         }
-    
+
         return allAttrRanges;
     }
-    
 
     private int normalizeDistance(double rawDistance, double maxDistance, int min, int max) {
-        if (maxDistance == 0) return 1;
+        if (maxDistance == 0)
+            return 1;
         double normalized = Math.log(1 + rawDistance) / Math.log(1 + maxDistance);
-        return min + (int) Math.floor(normalized * (max -1));
+        return min + (int) Math.floor(normalized * (max - 1));
     }
 
     public int computeDistance(String s1, String s2) {
@@ -282,8 +284,10 @@ public class CandidateKeyGeneration {
         int len2 = s2.length();
         int[][] dp = new int[len1 + 1][len2 + 1];
 
-        for (int i = 0; i <= len1; i++) dp[i][0] = i;
-        for (int j = 0; j <= len2; j++) dp[0][j] = j;
+        for (int i = 0; i <= len1; i++)
+            dp[i][0] = i;
+        for (int j = 0; j <= len2; j++)
+            dp[0][j] = j;
 
         for (int i = 1; i <= len1; i++) {
             for (int j = 1; j <= len2; j++) {
@@ -291,15 +295,15 @@ public class CandidateKeyGeneration {
                     dp[i][j] = dp[i - 1][j - 1];
                 } else {
                     dp[i][j] = Math.min(dp[i - 1][j - 1],
-                               Math.min(dp[i - 1][j],
-                                        dp[i][j - 1]))
-                             + 1;
+                            Math.min(dp[i - 1][j],
+                                    dp[i][j - 1]))
+                            + 1;
                 }
             }
         }
         return dp[len1][len2];
     }
-    
+
     public static class Tuple {
         private List<String> attributes;
 

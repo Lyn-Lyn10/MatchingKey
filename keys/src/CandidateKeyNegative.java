@@ -5,8 +5,9 @@ import java.util.*;
 public class CandidateKeyNegative {
     private final Set<String> distanceCache = new HashSet<>();
 
-    public Set<Candidate> MS(Candidate psi, Set<String> qMinusPsi0, Set<String> pPlusPsi0, Map<Integer, List<Integer>> topDistancesMap,
-    Map<String, int[]> mapHash) {
+    public Set<Candidate> MS(Candidate psi, Set<String> qMinusPsi0, Set<String> pPlusPsi0,
+            Map<Integer, List<Integer>> topDistancesMap,
+            Map<String, int[]> mapHash) {
 
         Set<Candidate> PsiS = new HashSet<>();
         for (int attrIndex = 0; attrIndex < psi.getDistanceRestrictions().size(); attrIndex++) {
@@ -17,7 +18,7 @@ public class CandidateKeyNegative {
                 continue;
             int dSMax = dv, dMax = dv;
             int dSMin = du, dMin = du;
-            for (String pair : qMinusPsi0){
+            for (String pair : qMinusPsi0) {
                 int dA = mapHash.get(pair)[attrIndex];
                 if (dA > dMax && dA <= du) {
                     if (psi.matches(pair, mapHash)) {
@@ -32,7 +33,7 @@ public class CandidateKeyNegative {
                     }
                 }
             }
-            for (String pair : pPlusPsi0){
+            for (String pair : pPlusPsi0) {
                 int dA = mapHash.get(pair)[attrIndex];
                 if (dA < dMax) {
                     if (dA > dSMax) {
@@ -73,7 +74,7 @@ public class CandidateKeyNegative {
             Candidate psiS = iterator.next();
             String key = psiS.getSerial();
             if (distanceCache.contains(key)) {
-                iterator.remove(); 
+                iterator.remove();
                 continue;
             }
             for (String pair : new HashSet<>(psi.getPositiveSet())) {
@@ -83,12 +84,11 @@ public class CandidateKeyNegative {
             }
             if (psiS.getPositiveSetSize() <= 0) {
                 distanceCache.add(key);
-                iterator.remove(); 
+                iterator.remove();
             }
         }
         return PsiS;
     }
-
 
     // Algorithm 3: Candidate Generation with Negative Pruning MCG
     public Set<Candidate> MCG(Candidate psi, Set<String> pPlusPsi0, Set<String> qMinusPsi0, Double eta_c,
@@ -105,7 +105,7 @@ public class CandidateKeyNegative {
                 double confidence = (double) psi.getPositiveSetSize() / (psi.getAgreeSet().size());
                 if (Double.isNaN(confidence) || confidence < eta_c || confidence == 0.0) {
                     PsiR.add(psi);
-                    Set<Candidate> PsiS = MS(psi, p, psi.getPositiveSet(), topDistancesMap,mapHash);
+                    Set<Candidate> PsiS = MS(psi, p, psi.getPositiveSet(), topDistancesMap, mapHash);
                     for (Candidate psiS : PsiS) {
                         String key = psiS.getSerial();
                         if (!distanceCache.contains(key)) {
@@ -130,11 +130,11 @@ public class CandidateKeyNegative {
         }
         for (Candidate psii : Psi0) {
             List<int[]> distanceRestrictions = psii.getDistanceRestrictions();
-        
+
             for (int attrIndex = 0; attrIndex < distanceRestrictions.size(); attrIndex++) {
                 int[] restrictions = distanceRestrictions.get(attrIndex);
                 List<int[]> subsets = generateSubsets(restrictions, topDistancesMap.get(attrIndex));
-        
+
                 for (int[] subset : subsets) {
                     List<int[]> newRestrictions = new ArrayList<>();
                     for (int i = 0; i < distanceRestrictions.size(); i++) {
@@ -145,14 +145,14 @@ public class CandidateKeyNegative {
                         }
                     }
                     String key = serializeRestrictions(newRestrictions);
-        
+
                     if (!distanceCache.contains(key)) {
                         distanceCache.add(key);
                     }
                 }
             }
-            
-        }  
+
+        }
         return Psi0;
     }
 
@@ -206,11 +206,10 @@ public class CandidateKeyNegative {
         private List<int[]> distanceRestrictions;
         private Set<String> agreeSet;
         private Set<String> positiveSet;
-        private Set<String> negativeSet; 
+        private Set<String> negativeSet;
         private double support;
         private double confidence;
         private int totalPairs;
-        private int truth;
         private String serial;
 
         public Candidate(List<int[]> distanceRestrictions, int totalPairs) {
@@ -219,26 +218,33 @@ public class CandidateKeyNegative {
             this.agreeSet = new HashSet<>();
             this.negativeSet = new HashSet<>();
             this.totalPairs = totalPairs;
-            this.truth = 0;
             StringBuilder sb = new StringBuilder();
             for (int[] r : distanceRestrictions) {
                 sb.append(r[0]).append(r[1]);
             }
-            this.serial = sb.toString(); 
+            this.serial = sb.toString();
         }
-        public void reSerial(){
+
+        public void reSerial() {
             StringBuilder sb = new StringBuilder();
             for (int[] r : distanceRestrictions) {
                 sb.append(r[0]).append(r[1]);
             }
-            this.serial = sb.toString(); 
+            this.serial = sb.toString();
         }
+
         public void addAgree(String pairKey) {
             agreeSet.add(pairKey);
         }
+
+        public void deleteAgree(String pairKey) {
+            agreeSet.remove(pairKey);
+        }
+
         public String getSerial() {
             return this.serial;
         }
+
         public Candidate copy() {
             List<int[]> copiedRestrictions = new ArrayList<>();
             for (int[] range : this.distanceRestrictions) {
@@ -254,7 +260,6 @@ public class CandidateKeyNegative {
             for (String pair : this.positiveSet) {
                 candidateCopy.addpositive(pair);
             }
-            candidateCopy.truth = this.truth;
             candidateCopy.confidence = this.confidence;
             candidateCopy.support = this.support;
 
@@ -266,11 +271,11 @@ public class CandidateKeyNegative {
             if (distances == null) {
                 return false;
             }
-        
+
             for (int attrIndex = 0; attrIndex < distanceRestrictions.size(); attrIndex++) {
                 int[] restriction = distanceRestrictions.get(attrIndex);
                 int distance = distances[attrIndex];
-        
+
                 if (distance < restriction[0] || distance > restriction[1]) {
                     return false;
                 }
@@ -305,11 +310,11 @@ public class CandidateKeyNegative {
             return agreeSet;
         }
 
-        public Set<String> getNegativeSet() { 
+        public Set<String> getNegativeSet() {
             return negativeSet;
         }
 
-        public Set<String> getPositiveSet() { 
+        public Set<String> getPositiveSet() {
             return positiveSet;
         }
 
@@ -331,7 +336,7 @@ public class CandidateKeyNegative {
                 int[] range = distanceRestrictions.get(i);
                 sb.append(String.format("Attribute %d: [%d, %d]\n", i, range[0], range[1]));
             }
-            confidence = (double)positiveSet.size() /(double) agreeSet.size();
+            confidence = (double) positiveSet.size() / (double) agreeSet.size();
             support = (double) agreeSet.size() / totalPairs;
             sb.append(String.format("Support: %.6f\n", support));
             sb.append(String.format("Confidence: %.2f\n", confidence));

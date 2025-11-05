@@ -46,7 +46,7 @@ public class GreedyAlgorithmWithPruning {
                 Candidate candidate = iterator.next();
                 boolean shouldUpdate = false;
                 int attrIndex = 0;
-                for (int[] range : candidate.getDistanceRestrictions()){
+                for (int[] range : candidate.getDistanceRestrictions()) {
                     int[] range_p1 = psi_p1.getDistanceRestrictions().get(attrIndex);
                     int[] range_p5 = psi_p5.getDistanceRestrictions().get(attrIndex);
                     int[] range_p6 = psi_p6.getDistanceRestrictions().get(attrIndex);
@@ -89,7 +89,7 @@ public class GreedyAlgorithmWithPruning {
         List<int[]> newRestrictions = new ArrayList<>();
         for (int[] range : originalRestrictions) {
             if (range[0] == min || range[1] == max) {
-                newRestrictions.add(new int[] {-1, 11});
+                newRestrictions.add(new int[] { -1, 11 });
             } else {
                 int[] newRange = new int[] { range[0] - 1, range[1] + 1 };
                 newRestrictions.add(newRange);
@@ -103,7 +103,7 @@ public class GreedyAlgorithmWithPruning {
 
         for (int[] range : originalRestrictions) {
             if (range[0] == min) {
-                newRestrictions.add(new int[] {-1, -1});
+                newRestrictions.add(new int[] { -1, -1 });
             } else {
                 int[] newRange = new int[] { min, range[0] - 1 };
                 newRestrictions.add(newRange);
@@ -116,7 +116,7 @@ public class GreedyAlgorithmWithPruning {
         List<int[]> newRestrictions = new ArrayList<>();
         for (int[] range : originalRestrictions) {
             if (range[1] == max) {
-                newRestrictions.add(new int[] {11, 11});
+                newRestrictions.add(new int[] { 11, 11 });
             } else {
                 int[] newRange = new int[] { range[1] + 1, max };
                 newRestrictions.add(newRange);
@@ -125,16 +125,15 @@ public class GreedyAlgorithmWithPruning {
         return new Candidate(newRestrictions, totalPairs);
     }
 
-
     public static void main(String[] args) {
-        String filePath = "../data/retail.arff";
-        double[] c = {140.0,150.0};
-        for (int mm = 0; mm <=1; mm++){
+        String filePath = "./data/retail.arff";
+        double[] c = { 140.0, 150.0 };
+        for (int mm = 0; mm <= 1; mm++) {
             for (int m = 100; m <= 1300; m += 200) {
                 System.out.println("Processing with m = " + m);
                 List<Tuple> r = new ArrayList<>();
                 Set<String> correctPairs = new HashSet<>();
-                int[] selectedColumns = { 0, 1,2,3};
+                int[] selectedColumns = { 0, 1, 2, 3 };
 
                 try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                     String line;
@@ -167,7 +166,7 @@ public class GreedyAlgorithmWithPruning {
                     }
                     for (int i = 0; i < Math.min(m, data.size()); i += 1) {
                         for (int j = i + 1; j < Math.min(m, data.size()); j++) {
-                            if (data.get(i).length > 4 && data.get(j).length > 4 ){
+                            if (data.get(i).length > 4 && data.get(j).length > 4) {
                                 if (data.get(i)[4].equals(data.get(j)[4])) {
                                     String pairKey = i + "," + j;
                                     correctPairs.add(pairKey);
@@ -182,15 +181,14 @@ public class GreedyAlgorithmWithPruning {
                 double eta_c = 1.0;
                 int min = 1;
                 int max = 10;
-                List<Double> ratios = Arrays.asList(1.0, 1.0, 1.0,1.0); 
+                List<Double> ratios = Arrays.asList(1.0, 1.0, 1.0, 1.0);
                 CandidateKey CS = new CandidateKey();
-                Set<Candidate> candidateSet = CS.preprocessAndCalculateDistances(r, eta_c, correctPairs, min, max,ratios);
+                Set<Candidate> candidateSet = CS.preprocessAndCalculateDistances(r, eta_c, correctPairs, min, max,
+                        ratios);
                 List<Candidate> candidateList = new ArrayList<>(candidateSet);
 
-                candidateList.sort((c1, c2) -> 
-                    Integer.compare(c2.getTotalRange(), c1.getTotalRange())
-                );
-            
+                candidateList.sort((c1, c2) -> Integer.compare(c2.getTotalRange(), c1.getTotalRange()));
+
                 candidateSet = new LinkedHashSet<>(candidateList);
 
                 double eta_s = c[mm] / 844350;

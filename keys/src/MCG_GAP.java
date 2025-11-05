@@ -18,9 +18,9 @@ import src.CandidateKeyNegative.Candidate;
 import src.CandidateKeyNegative.EditDistanceUtil;
 import src.CandidateKeyNegative.Tuple;
 
-
 public class MCG_GAP {
     static Map<String, int[]> distanceCache = new HashMap<>();
+
     public static Set<Candidate> GAPMCG(Set<Candidate> psi, double eta_s, int[] min, int[] max) {
         Set<Candidate> Ψo = new HashSet<>();
         double supp_s_psi_o = 0;
@@ -102,7 +102,7 @@ public class MCG_GAP {
             int[] range = originalRestrictions.get(j);
 
             if (range[0] == min[i] || range[1] == max[i]) {
-                newRestrictions.add(new int[] {-1, 10});
+                newRestrictions.add(new int[] { -1, 10 });
             } else {
                 int[] newRange = new int[] { range[0] - 1, range[1] + 1 };
                 newRestrictions.add(newRange);
@@ -120,7 +120,7 @@ public class MCG_GAP {
             int[] range = originalRestrictions.get(j);
 
             if (range[0] == min[i]) {
-                newRestrictions.add(new int[] {-1, -1});
+                newRestrictions.add(new int[] { -1, -1 });
             } else {
                 int[] newRange = new int[] { min[i], range[0] - 1 };
                 newRestrictions.add(newRange);
@@ -139,7 +139,7 @@ public class MCG_GAP {
             int[] range = originalRestrictions.get(j);
 
             if (range[1] == max[i]) {
-                newRestrictions.add(new int[] {10, 10});
+                newRestrictions.add(new int[] { 10, 10 });
             } else {
                 int[] newRange = new int[] { range[1] + 1, max[i] };
                 newRestrictions.add(newRange);
@@ -150,15 +150,16 @@ public class MCG_GAP {
     }
 
     private static int normalizeDistance(double rawDistance, double maxDistance, int min, int max) {
-        if (maxDistance == 0) return 1;
+        if (maxDistance == 0)
+            return 1;
         double normalized = Math.log(1 + rawDistance) / Math.log(1 + maxDistance);
-        return min + (int) Math.floor(normalized * (max ));
+        return min + (int) Math.floor(normalized * (max));
     }
 
     public static Map<Integer, List<Integer>> calculateDistanceValues(int min, int max, List<Double> ratios) {
         Map<Integer, List<Integer>> allAttrRanges = new HashMap<>();
         int numAttributes = distanceCache.values().iterator().next().length;
-    
+
         for (int attr = 0; attr < numAttributes; attr++) {
             Map<Integer, Integer> frequencyMap = new HashMap<>();
 
@@ -171,7 +172,8 @@ public class MCG_GAP {
             sortedByFreq.sort((a, b) -> frequencyMap.get(b) - frequencyMap.get(a));
 
             int keepCount = (int) Math.ceil(sortedByFreq.size() * ratios.get(attr));
-            Set<Integer> selectedDistances = new TreeSet<>(sortedByFreq.subList(0, Math.min(keepCount, sortedByFreq.size())));
+            Set<Integer> selectedDistances = new TreeSet<>(
+                    sortedByFreq.subList(0, Math.min(keepCount, sortedByFreq.size())));
 
             Set<Integer> actualValues = new HashSet<>();
             for (int[] distances : distanceCache.values()) {
@@ -188,22 +190,21 @@ public class MCG_GAP {
             Collections.sort(distList);
             allAttrRanges.put(attr, distList);
         }
-    
+
         return allAttrRanges;
     }
-    
 
     public static void main(String[] args) {
-        String filePath = "../data/retail.arff";
-        double[] c = {150.0,140.0};
-        for (int mm = 0; mm <=1; mm++){
+        String filePath = "./data/retail.arff";
+        double[] c = { 150.0, 140.0 };
+        for (int mm = 0; mm <= 1; mm++) {
             System.out.println(c[mm]);
             for (int m = 100; m <= 1300; m += 200) {
 
                 List<Tuple> r = new ArrayList<>();
                 Set<String> pPlusPsi0 = new HashSet<>();
                 Set<String> qMinusPsi0 = new HashSet<>();
-                int[] selectedColumns = { 0,1, 2,3};
+                int[] selectedColumns = { 0, 1, 2, 3 };
                 int maxn = 4;
                 try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                     String line;
@@ -260,17 +261,18 @@ public class MCG_GAP {
                 System.out.println("eta_c:" + eta_c);
                 int s = r.get(0).size();
                 List<Double> percentages = Arrays.asList(1.0, 1.0, 1.0, 1.0);
-                int min =0;
-                int max =9;
+                int min = 0;
+                int max = 9;
                 double[] maxDistances = new double[s];
                 Map<String, Integer> distanceCount = new HashMap<>();
-                // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                // DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd
+                // HH:mm:ss");
                 DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                    .appendPattern("yyyy-MM-dd HH:mm:ss")
-                    .optionalStart()
-                    .appendFraction(ChronoField.MICRO_OF_SECOND, 1, 6, true)
-                    .optionalEnd()
-                    .toFormatter();
+                        .appendPattern("yyyy-MM-dd HH:mm:ss")
+                        .optionalStart()
+                        .appendFraction(ChronoField.MICRO_OF_SECOND, 1, 6, true)
+                        .optionalEnd()
+                        .toFormatter();
 
                 ZoneOffset zoneOffset = ZoneOffset.UTC;
                 for (int attr = 0; attr < s; attr++) {
@@ -289,8 +291,7 @@ public class MCG_GAP {
                             } else {
                                 dist = EditDistanceUtil.calculateEditDistance(
                                         r.get(i).getAttribute(attr),
-                                        r.get(j).getAttribute(attr)
-                                );
+                                        r.get(j).getAttribute(attr));
                             }
                             distanceCount.put(key, dist);
                             maxDistances[attr] = Math.max(maxDistances[attr], dist);
@@ -302,7 +303,7 @@ public class MCG_GAP {
                     for (int j = i + 1; j < r.size(); j++) {
                         String pairKey = i + "," + j;
                         int[] distances = new int[s];
-        
+
                         for (int attr = 0; attr < s; attr++) {
                             String key = i + "," + j + "," + attr;
                             int rawDist = distanceCount.get(key);
@@ -311,7 +312,7 @@ public class MCG_GAP {
                         distanceCache.put(pairKey, distances);
                     }
                 }
-                Map<Integer, List<Integer>> topdistanceMap = calculateDistanceValues(min, max,percentages);
+                Map<Integer, List<Integer>> topdistanceMap = calculateDistanceValues(min, max, percentages);
                 List<int[]> distanceRestrictions = new ArrayList<>();
 
                 for (Map.Entry<Integer, List<Integer>> entry : topdistanceMap.entrySet()) {
@@ -320,7 +321,7 @@ public class MCG_GAP {
                     if (!values.isEmpty()) {
                         int minVal = Collections.min(values);
                         int maxVal = Collections.max(values);
-                        distanceRestrictions.add(new int[]{minVal, maxVal});
+                        distanceRestrictions.add(new int[] { minVal, maxVal });
                     }
                 }
                 int totalPairs = r.size() * (r.size() - 1) / 2;
@@ -332,7 +333,8 @@ public class MCG_GAP {
 
                 System.out.println("Begin MCG");
                 long startTime = System.currentTimeMillis();
-                Set<Candidate> candidateSet = generator.MCG(psi, pPlusPsi0, qMinusPsi0, eta_c, topdistanceMap, distanceCache);
+                Set<Candidate> candidateSet = generator.MCG(psi, pPlusPsi0, qMinusPsi0, eta_c, topdistanceMap,
+                        distanceCache);
                 long endTime = System.currentTimeMillis();
                 long executionTime = endTime - startTime;
                 System.out.println("MCG time (milliseconds): " + executionTime);
@@ -340,12 +342,12 @@ public class MCG_GAP {
                 for (Candidate candidate : candidateSet) {
                     // System.out.println(candidate.toString());
                 }
-                generator.printCallCounts();
+                // generator.printCallCounts();
                 System.out.println("gd num:" + pPlusPsi0.size());
                 double eta_s = c[mm] / 844350;
                 long startTimeMillis = System.currentTimeMillis();
-                int[] minn = {0,0,0,0};
-                int[] maxx = {9,9,9,9};
+                int[] minn = { 0, 0, 0, 0 };
+                int[] maxx = { 9, 9, 9, 9 };
                 Set<Candidate> resultSet = GAPMCG(candidateSet, eta_s, minn, maxx);
 
                 long endTimeMillis = System.currentTimeMillis();
@@ -356,7 +358,7 @@ public class MCG_GAP {
                 for (Candidate candidate : resultSet) {
                     System.out.println(candidate.toString());
                 }
-                }
+            }
         }
     }
 }

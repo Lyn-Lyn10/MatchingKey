@@ -59,13 +59,13 @@ public class GreedyAlgorithm {
     }
 
     public static void main(String[] args) {
-        String filePath = "../data/retail.arff";
-        double[] nc = {140.0,150.0};
-        for (int num = 0; num <=1; num++){
+        String filePath = "./data/retail.arff";
+        double[] nc = { 140.0, 150.0 };
+        for (int num = 0; num <= 1; num++) {
             for (int m = 100; m <= 1300; m += 200) {
                 List<Tuple> r = new ArrayList<>();
                 Set<String> correctPairs = new HashSet<>();
-                int[] selectedColumns = { 0, 1, 2, 3};
+                int[] selectedColumns = { 0, 1, 2, 3 };
                 try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                     String line;
                     boolean dataSection = false;
@@ -98,7 +98,7 @@ public class GreedyAlgorithm {
 
                     for (int i = 0; i < Math.min(m, data.size()); i += 1) {
                         for (int j = i + 1; j < Math.min(m, data.size()); j++) {
-                            if (data.get(i).length > 4 && data.get(j).length > 4 ){
+                            if (data.get(i).length > 4 && data.get(j).length > 4) {
                                 if (data.get(i)[4].equals(data.get(j)[4])) {
                                     String pairKey = i + "," + j;
                                     correctPairs.add(pairKey);
@@ -112,19 +112,18 @@ public class GreedyAlgorithm {
                 double eta_c = 1.0;
                 int min = 1;
                 int max = 10;
-                List<Double> ratios = Arrays.asList(1.0, 1.0, 1.0,1.0);
+                List<Double> ratios = Arrays.asList(1.0, 1.0, 1.0, 1.0);
                 CandidateKeyGeneration CS = new CandidateKeyGeneration();
-                Set<Candidate> candidateSet = CS.preprocessAndCalculateDistances(r, eta_c, correctPairs, min, max,ratios);
+                Set<Candidate> candidateSet = CS.preprocessAndCalculateDistances(r, eta_c, correctPairs, min, max,
+                        ratios);
                 List<Candidate> candidateList = new ArrayList<>(candidateSet);
-                candidateList.sort((c1, c2) -> 
-                    Integer.compare(c2.getTotalRange(), c1.getTotalRange())
-                );
-            
+                candidateList.sort((c1, c2) -> Integer.compare(c2.getTotalRange(), c1.getTotalRange()));
+
                 candidateSet = new LinkedHashSet<>(candidateList);
 
                 double eta_s = nc[num] / 844350;
                 long startTimeMillis = System.currentTimeMillis();
-                Set<Candidate> resultSet =  greedyAlgorithm(candidateSet, eta_s, min,
+                Set<Candidate> resultSet = greedyAlgorithm(candidateSet, eta_s, min,
                         max);
                 long endTimeMillis = System.currentTimeMillis();
                 long executionTimeMillis = endTimeMillis - startTimeMillis;
