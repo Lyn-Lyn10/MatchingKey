@@ -4,9 +4,9 @@
 
 ### 1. Method Implementations (Located in `keys/src/`)
 
-This directory contains the implementation code for candidate key generation and final matching key set selection algorithms:
+This directory contains the implementation code for candidate generation and final matching key set selection algorithms:
 
-#### 🔹 Candidate Key Generation
+#### 🔹 Candidate Generation
 
 - `CandidateKey.java`  
   Implements the **CS** method.
@@ -39,10 +39,17 @@ This directory contains the implementation code for candidate key generation and
   Represents the **Restaurant dataset**.
 
 - Other `.arff` files  
-  Correspond to datasets with matching names and are used for algorithm testing and evaluation.
+  Correspond to datasets with matching names and are used for algorithm training and evaluation.
 
 ---
 
-## 📌 Usage Notes
+## 🚀 How to Run
 
-Before running the project, make sure the main class entry point is correctly set in the `src` directory and that the corresponding `.arff` dataset files from the `data` folder are loaded properly.
+You can execute different methods by running the corresponding main class file in the `keys/src/` directory:
+
+|**Method Combination**|       **Main File to Run**        |      
+|  ------------------  | --------------------------------- | 
+|  **CS/CSP + GA**     | `GreedyAlgorithm.java`            | 
+|  **CS/CSP + GAP**    | `GreedyAlgorithmWithPruning.java` | 
+|  **MCG + GA**        | `MCG_GA.java`                     | 
+|  **MCG + GAP**       | `MCG_GAP.java`                    | 
